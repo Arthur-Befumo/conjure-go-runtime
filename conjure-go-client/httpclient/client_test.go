@@ -15,6 +15,7 @@
 package httpclient_test
 
 import (
+	"bytes"
 	"context"
 	"io"
 	"io/ioutil"
@@ -62,7 +63,11 @@ func TestMiddlewareCanReadBody(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	resp, err := client.Do(context.Background(), httpclient.WithRequestBody(unencodedBody, codecs.Plain), httpclient.WithRequestMethod("GET"))
+	requestBodyProvider := func() io.ReadCloser {
+		return ioutil.NopCloser(bytes.NewReader(encodedBody))
+	}
+
+	resp, err := client.Do(context.Background(), httpclient.WithRawRequestBodyProvider(requestBodyProvider), httpclient.WithRequestMethod("GET"))
 	require.NoError(t, err)
 	require.NotNil(t, resp)
 }
